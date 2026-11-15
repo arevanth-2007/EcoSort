@@ -1,0 +1,30 @@
+# Node & dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Environment variables
+.env*.local
+.env
+
+# Next.js build outputs
+.next/
+out/
+build/
+dist/
+
+# Local PostgreSQL cluster data & logs
+.pgdata/
+*.log
+
+# Prisma generated artifacts
+dev.db
+dev.db-journal
+
+# Uploads directory
+public/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+tsconfig.tsbuildinfo

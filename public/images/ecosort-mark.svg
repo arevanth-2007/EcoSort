@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="ecoGrad1" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="ecoGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="60%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#84cc16" />
+    </linearGradient>
+    <linearGradient id="ecoNodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a7f3d0" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+  </defs>
+
+  <!-- Hexagonal / Circular Shield Base -->
+  <rect x="6" y="6" width="88" height="88" rx="26" fill="#0f172a" />
+  
+  <!-- Outer Smooth Möbius Flow Loops -->
+  <path d="M50 20 C66 20 78 32 78 48 C78 64 64 74 50 82 C36 74 22 64 22 48 C22 32 34 20 50 20 Z" 
+        stroke="url(#ecoGrad1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Interlocking Smart Recycler Swirl -->
+  <path d="M36 42 C40 34 60 34 64 42 C68 50 56 60 50 66 C44 60 32 50 36 42 Z" 
+        fill="url(#ecoGrad2)" opacity="0.9" />
+
+  <!-- Central AI Vision Prism / Core Node -->
+  <circle cx="50" cy="48" r="6.5" fill="url(#ecoNodeGrad)" />
+  <circle cx="50" cy="48" r="2.5" fill="#064e3b" />
+
+  <!-- Tri-facet Segregation Flow Arrows (Top, Bottom-Right, Bottom-Left) -->
+  <path d="M50 16 L53 23 L47 23 Z" fill="#34d399" />
+  <path d="M78 54 L75 62 L81 60 Z" fill="#10b981" />
+  <path d="M22 54 L25 62 L19 60 Z" fill="#84cc16" />
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 52" fill="none">
+  <defs>
+    <linearGradient id="markGradD" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="markGradD2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6ee7b7" />
+      <stop offset="60%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#a3e635" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left Icon Mark -->
+  <g transform="translate(4, 4)">
+    <rect x="0" y="0" width="44" height="44" rx="14" fill="#064e3b" stroke="#10b981" stroke-width="1.2" />
+    <!-- Möbius Flow -->
+    <path d="M22 9 C29.5 9 35 14.5 35 22 C35 29.5 28.5 34 22 38 C15.5 34 9 29.5 9 22 C9 14.5 14.5 9 22 9 Z" 
+          stroke="url(#markGradD)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Inner faceted core -->
+    <path d="M16 19 C18 15 26 15 28 19 C30 23 25 27.5 22 30 C19 27.5 14 23 16 19 Z" 
+          fill="url(#markGradD2)" opacity="0.95" />
+    <!-- Tech Node -->
+    <circle cx="22" cy="22" r="3" fill="#d1fae5" />
+    <circle cx="22" cy="22" r="1.2" fill="#064e3b" />
+  </g>
+
+  <!-- Wordmark -->
+  <text x="58" y="32" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-size="24" font-weight="800" letter-spacing="-0.03em" fill="#ffffff">Eco<tspan fill="#34d399">Sort</tspan></text>
+  
+  <!-- Subtle Badge Dot -->
+  <circle cx="166" cy="18" r="3" fill="#34d399" />
+
+  <!-- Subtitle Tagline -->
+  <text x="59" y="44" font-family="'Inter', -apple-system, sans-serif" font-size="7.5" font-weight="600" letter-spacing="0.12em" fill="#94a3b8" text-transform="uppercase">Smart Segregation</text>
+</svg>

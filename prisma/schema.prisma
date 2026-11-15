@@ -1,0 +1,406 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CITIZEN
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum WasteCategory {
+  PLASTIC
+  PAPER
+  CARDBOARD
+  GLASS
+  METAL
+  ORGANIC
+  E_WASTE
+  OTHER
+}
+
+enum SubmissionStatus {
+  PENDING
+  AI_ANALYZED
+  MANUAL_INSPECTION
+  APPROVED
+  REJECTED
+}
+
+enum VerificationMethod {
+  NONE
+  MANUAL
+  AI_ASSISTED
+}
+
+enum TransactionType {
+  WASTE_REWARD
+  REWARD_REDEMPTION
+  ADMIN_ADJUSTMENT
+  CHALLENGE_BONUS
+}
+
+enum RedemptionStatus {
+  PENDING
+  REDEEMED
+  CANCELLED
+  EXPIRED
+}
+
+enum ChallengeType {
+  RECYCLE_WEIGHT
+  SUBMISSION_COUNT
+  SPECIFIC_CATEGORY
+}
+
+enum SupportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum NotificationType {
+  SUBMISSION_APPROVED
+  SUBMISSION_REJECTED
+  COINS_CREDITED
+  REWARD_REDEEMED
+  REDEMPTION_CANCELLED
+  CHALLENGE_COMPLETED
+  BADGE_UNLOCKED
+  SYSTEM_ANNOUNCEMENT
+  GENERAL_ANNOUNCEMENT
+  IMPORTANT
+  ACCOUNT
+  ECOSORT_UPDATE
+  REWARD
+}
+
+model User {
+  id            String         @id @default(cuid())
+  citizenId     String?        @unique
+  name          String
+  email         String         @unique
+  mobile        String?        @unique
+  passwordHash  String
+  role          Role           @default(CITIZEN)
+  status        UserStatus     @default(ACTIVE)
+  address       String?
+  avatarUrl     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  citizenProfile      CitizenProfile?
+  wallet              Wallet?
+  submissions         WasteSubmission[]
+  reviewedSubmissions WasteSubmission[]          @relation("AdminReviews")
+  redemptions         Redemption[]
+  notifications       Notification[]
+  badges              CitizenBadge[]
+  challenges          CitizenChallengeProgress[]
+  supportTickets      SupportTicket[]
+  auditLogs           AuditLog[]
+  adminCampaigns      AdminNotificationCampaign[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model CitizenProfile {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ecoLevel                 Int      @default(1)
+  ecoTitle                 String   @default("Eco Beginner")
+  totalApprovedWeightKg    Float    @default(0.0)
+  approvedSubmissionsCount Int      @default(0)
+  city                     String?
+  updatedAt                DateTime @updatedAt
+}
+
+model WasteSubmission {
+  id                   String             @id @default(cuid())
+  submissionCode       String             @unique // e.g. ECO-SUB-00001
+  userId               String
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userSelectedCategory WasteCategory
+  aiPredictedCategory  String?
+  aiConfidence         Float?             // e.g. 0.94 for 94%
+  aiModelUsed          String?            @default("gemini-3.1-flash-lite")
+  imageUrl             String
+  imageHash            String             // SHA-256 hash for duplicate prevention
+  weightKg             Float              // citizen-entered estimated weight
+  coinsAwarded         Int                @default(0)
+  status               SubmissionStatus   @default(PENDING)
+  verificationMethod   VerificationMethod @default(NONE)
+  rejectionReason      String?
+  adminNotes           String?
+  reviewedById         String?
+  reviewedBy           User?              @relation("AdminReviews", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt           DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  aiAnalysis       AIAnalysis?
+  manualInspection ManualInspection?
+
+  @@index([userId])
+  @@index([status])
+  @@index([imageHash])
+  @@index([createdAt])
+}
+
+model AIAnalysis {
+  id                String          @id @default(cuid())
+  submissionId      String          @unique
+  submission        WasteSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  predictedCategory String
+  confidence        Float
+  rawLabel          String
+  modelUsed         String
+  analyzedAt        DateTime        @default(now())
+}
+
+model ManualInspection {
+  id               String          @id @default(cuid())
+  submissionId     String          @unique
+  submission       WasteSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  adminId          String
+  selectedCategory String
+  notes            String?
+  inspectedAt      DateTime        @default(now())
+}
+
+model Wallet {
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance      Int                 @default(0)
+  totalEarned  Int                 @default(0)
+  totalSpent   Int                 @default(0)
+  updatedAt    DateTime            @updatedAt
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id              String          @id @default(cuid())
+  transactionCode String          @unique // e.g. ECO-TXN-00001
+  walletId        String
+  wallet          Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type            TransactionType
+  amount          Int             // positive for earning, negative for spending
+  balanceAfter    Int
+  description     String
+  referenceId     String?         // submissionCode or redemptionCode
+  createdAt       DateTime        @default(now())
+
+  @@index([walletId])
+  @@index([createdAt])
+}
+
+model SampleStore {
+  id          String   @id @default(cuid())
+  storeCode   String   @unique
+  name        String
+  address     String
+  city        String
+  description String
+  phone       String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  rewards     Reward[]
+}
+
+model Reward {
+  id            String       @id @default(cuid())
+  rewardCode    String       @unique
+  title         String
+  description   String
+  category      String       // Eco-Product, Sapling, Voucher, Digital
+  coinCost      Int
+  stock         Int          @default(50)
+  imageUrl      String
+  isActive      Boolean      @default(true)
+  sampleStoreId String?
+  sampleStore   SampleStore? @relation(fields: [sampleStoreId], references: [id], onDelete: SetNull)
+  expiryDate    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  redemptions Redemption[]
+
+  @@index([isActive])
+}
+
+model Redemption {
+  id             String           @id @default(cuid())
+  redemptionCode String           @unique // e.g. ECO-RED-00001
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rewardId       String
+  reward         Reward           @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  coinCost       Int
+  status         RedemptionStatus @default(PENDING)
+  qrSecret       String           @unique
+  redeemedAt     DateTime?
+  cancelledAt    DateTime?
+  adminNotes     String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Challenge {
+  id             String                     @id @default(cuid())
+  title          String
+  description    String
+  targetType     ChallengeType
+  targetCategory WasteCategory?
+  targetValue    Float                      // e.g. 2.5 kg or 3 items
+  coinReward     Int
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean                    @default(true)
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  participants   CitizenChallengeProgress[]
+}
+
+model CitizenChallengeProgress {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId  String
+  challenge    Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  currentValue Float     @default(0)
+  isCompleted  Boolean   @default(false)
+  isClaimed    Boolean   @default(false)
+  completedAt  DateTime?
+
+  @@unique([userId, challengeId])
+  @@index([userId])
+}
+
+model Badge {
+  id          String         @id @default(cuid())
+  slug        String         @unique // e.g. "first-recycling", "plastic-saver"
+  name        String
+  description String
+  iconName    String
+  category    String
+  holders     CitizenBadge[]
+}
+
+model CitizenBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+}
+
+model AdminNotificationCampaign {
+  id                 String           @id @default(cuid())
+  title              String
+  message            String
+  type               NotificationType @default(GENERAL_ANNOUNCEMENT)
+  targetAudience     String           // "ALL_CITIZENS" or "INDIVIDUAL"
+  recipientCount     Int              @default(1)
+  recipientId        String?
+  recipientName      String?
+  recipientEmail     String?
+  recipientCitizenId String?
+  sentById           String
+  sentBy             User             @relation(fields: [sentById], references: [id], onDelete: Cascade)
+  status             String           @default("SENT")
+  createdAt          DateTime         @default(now())
+
+  @@index([createdAt])
+  @@index([sentById])
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    SupportStatus @default(OPEN)
+  createdAt DateTime      @default(now())
+}
+
+model SupportTicket {
+  id            String        @id @default(cuid())
+  ticketCode    String        @unique
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject       String
+  category      String
+  description   String
+  status        SupportStatus @default(OPEN)
+  adminResponse String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  adminEmail String?
+  admin      User?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action     String // e.g. ADMIN_LOGIN, CITIZEN_BLOCKED, REWARD_CREATED
+  details    String
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+}
+
+model SystemSettings {
+  id                     String   @id @default("global")
+  confidenceThreshold    Float    @default(0.80)
+  plasticRate            Int      @default(10)
+  paperRate              Int      @default(8)
+  cardboardRate          Int      @default(8)
+  glassRate              Int      @default(6)
+  metalRate              Int      @default(12)
+  organicRate            Int      @default(5)
+  ewasteRate             Int      @default(15)
+  maxWeightPerSubmission Float    @default(50.0)
+  aiProvider             String   @default("huggingface")
+  aiModelId              String   @default("gemini-3.1-flash-lite")
+  updatedAt              DateTime @updatedAt
+}
