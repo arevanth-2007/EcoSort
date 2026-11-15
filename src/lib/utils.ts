@@ -123,3 +123,25 @@ export function generateCode(prefix: "ECO-SUB" | "ECO-RED" | "ECO-TXN" | "ECO-TC
   const randomPart = Math.floor(10000 + Math.random() * 90000);
   return `${prefix}-${randomPart}`;
 }
+
+export function getPublicImageUrl(imageUrl: string | null | undefined): string {
+  if (!imageUrl) return "";
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://") ||
+    imageUrl.startsWith("data:")
+  ) {
+    return imageUrl;
+  }
+  if (imageUrl.startsWith("/uploads/")) {
+    return imageUrl;
+  }
+  const cleanPath = imageUrl.startsWith("waste-images/")
+    ? imageUrl.replace("waste-images/", "")
+    : imageUrl.replace(/^\/+/, "");
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    "https://elsbjcatfaifimatnnth.supabase.co";
+  return `${baseUrl}/storage/v1/object/public/waste-images/${cleanPath}`;
+}
+

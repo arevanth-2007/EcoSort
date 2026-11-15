@@ -3,7 +3,7 @@ import Link from "next/link";
 import prisma from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getPublicImageUrl } from "@/lib/utils";
 import CitizenIdBadge from "@/components/CitizenIdBadge";
 import {
   ArrowLeft,
@@ -122,7 +122,7 @@ export default async function SubmissionDetailPage({
           <div className="md:col-span-5 space-y-3">
             <div className="rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 shadow-xs aspect-square relative">
               <img
-                src={submission.imageUrl}
+                src={getPublicImageUrl(submission.imageUrl)}
                 alt={submission.submissionCode}
                 className="w-full h-full object-cover"
               />

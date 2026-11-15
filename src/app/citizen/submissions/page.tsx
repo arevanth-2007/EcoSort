@@ -2,7 +2,7 @@ import React from "react";
 import prisma from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getPublicImageUrl } from "@/lib/utils";
 import { WasteCategory, SubmissionStatus } from "@/lib/types";
 import {
   History,
@@ -80,7 +80,7 @@ export default async function CitizenSubmissionsPage({
             <div key={s.id} className="eco-card overflow-hidden flex flex-col justify-between group">
               <div className="relative h-44 bg-gray-100 overflow-hidden">
                 <img
-                  src={s.imageUrl}
+                  src={getPublicImageUrl(s.imageUrl)}
                   alt={s.submissionCode}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

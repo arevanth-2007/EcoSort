@@ -4,13 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { calculateImageHash } from "@/lib/crypto";
 import { generateCode } from "@/lib/utils";
 import { WasteCategory } from "@/lib/types";
-import fs from "fs";
-import path from "path";
-
-const uploadDir = path.join(process.cwd(), "public", "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+import { uploadWasteImage } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
@@ -64,7 +58,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Validate image file format and size (max 8MB)
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
     if (!allowedTypes.includes(imageFile.type)) {
       return NextResponse.json(
@@ -80,12 +73,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Convert file to buffer & compute SHA-256 hash for duplicate prevention
     const arrayBuffer = await imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const imageHash = calculateImageHash(buffer);
 
-    // Check for exact duplicate image across the platform
     const duplicateSubmission = await prisma.wasteSubmission.findFirst({
       where: { imageHash },
       select: { submissionCode: true, createdAt: true },
@@ -100,16 +91,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Save image locally for persistent display
-    const fileExt = imageFile.name.split(".").pop() || "jpg";
-    const fileName = `eco-${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
-    const filePath = path.join(uploadDir, fileName);
-    fs.writeFileSync(filePath, buffer);
-    const imageUrl = `/uploads/${fileName}`;
+    const fileExt = (imageFile.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const fileName = `eco-${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt || "jpg"}`;
+    const { imageUrl } = await uploadWasteImage(buffer, fileName, imageFile.type);
 
     const submissionCode = generateCode("ECO-SUB");
 
-    // 7. Create WasteSubmission in PENDING state (AI does NOT auto-approve; Admin adjudicates)
     const submission = await prisma.wasteSubmission.create({
       data: {
         submissionCode,
@@ -124,7 +111,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 8. Create citizen notification
     await prisma.notification.create({
       data: {
         userId: session.id,

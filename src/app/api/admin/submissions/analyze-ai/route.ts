@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { classifyWasteImageBuffer } from "@/lib/ai";
+import { downloadWasteImageBuffer } from "@/lib/storage";
 import fs from "fs";
 import path from "path";
 
@@ -30,22 +31,20 @@ export async function POST(req: NextRequest) {
     let imageBuffer: Buffer;
     if (submission.imageUrl.startsWith("/uploads/")) {
       const localPath = path.join(process.cwd(), "public", submission.imageUrl);
-      if (!fs.existsSync(localPath)) {
+      if (fs.existsSync(localPath)) {
+        imageBuffer = fs.readFileSync(localPath);
+      } else {
         return NextResponse.json({ error: `Image file not found on server disk at ${localPath}` }, { status: 404 });
       }
-      imageBuffer = fs.readFileSync(localPath);
-    } else if (submission.imageUrl.startsWith("http://") || submission.imageUrl.startsWith("https://")) {
-      const imgRes = await fetch(submission.imageUrl);
-      if (!imgRes.ok) {
+    } else {
+      try {
+        imageBuffer = await downloadWasteImageBuffer(submission.imageUrl);
+      } catch (dlErr: any) {
         return NextResponse.json(
-          { error: `Failed to download image from external URL (${imgRes.status} ${imgRes.statusText})` },
+          { error: `Failed to download image from storage: ${dlErr.message}` },
           { status: 502 }
         );
       }
-      const arrayBuffer = await imgRes.arrayBuffer();
-      imageBuffer = Buffer.from(arrayBuffer);
-    } else {
-      return NextResponse.json({ error: "Unrecognized image URL format" }, { status: 400 });
     }
 
     // Load settings for confidence threshold

@@ -20,6 +20,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { WasteCategory } from "@/lib/types";
+import { getPublicImageUrl } from "@/lib/utils";
 
 interface SubmissionUser {
   id: string;
@@ -424,7 +425,7 @@ export default function AdminAnalyzerApprovals() {
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative">
                         <img
-                          src={sub.imageUrl}
+                          src={getPublicImageUrl(sub.imageUrl)}
                           alt="Waste item"
                           className="w-full h-full object-cover"
                         />
@@ -516,7 +517,7 @@ export default function AdminAnalyzerApprovals() {
               <div className="space-y-4">
                 <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50 aspect-video relative">
                   <img
-                    src={selectedSubmission.imageUrl}
+                    src={getPublicImageUrl(selectedSubmission.imageUrl)}
                     alt="Inspection waste item"
                     className="w-full h-full object-contain"
                   />
